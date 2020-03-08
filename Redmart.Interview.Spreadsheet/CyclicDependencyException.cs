@@ -4,10 +4,10 @@ using System.Text;
 
 namespace Redmart.Interview.Spreadsheet
 {
-    public class CyclicDependencyException : ApplicationException
+    public class CyclicDependencyException : SpreadSheetException
     {
         public CyclicDependencyException(string cellId) :
-            base($"Cyclical Dependencies found when evaluatuing {cellId}")
+            base($"Cyclical Dependencies found when evaluatuing {cellId}", -4)
         {
 
         }

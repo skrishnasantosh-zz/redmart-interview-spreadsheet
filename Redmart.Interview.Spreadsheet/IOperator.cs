@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Redmart.Interview.Spreadsheet.Tokens
+namespace Redmart.Interview.Spreadsheet
 {
     public interface IOperator
     {
         bool IsOpcodeMatch(string token);
-        double Reduce(WorkSheetGraph graph, CellNode node, Stack<double> stack, string token);
+        
+        void Operate(string token, Stack<double> stack);
     }
 }

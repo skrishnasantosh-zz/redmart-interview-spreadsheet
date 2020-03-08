@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Redmart.Interview.Spreadsheet.Configuration;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -11,65 +12,116 @@ namespace Redmart.Interview.Spreadsheet
     // and detection of cyclic dependencies on such entry
     public class WorkSheetGraph 
     {
-        private readonly CellNode[,] cells;
-        private uint maxRows;
-        private uint maxColumns;
+        private readonly GraphNode[,] cells;
+                
+        public WorkSheetGraph(uint height, uint width)
+        {   
+            if (height == 0 || width == 0)
+                throw new WorksheetInvalidBoundsException(height, width);
 
-        public WorkSheetGraph(uint rows, uint columns)
-        {
-            cells = new CellNode[rows, columns];
+            // Create a null matrix of rows * columns
+            cells = new GraphNode[height, width];
 
-            if (rows == 0 || columns == 0)
-                throw new WorksheetInvalidBoundsException(rows, columns);
-
-            maxRows = rows - 1;
-            maxColumns = columns - 1;
+            Height = height - 1;
+            Width = width - 1;
         }
 
+        public uint Height 
+        { 
+            get; 
+        }
+
+        public uint Width 
+        { 
+            get; 
+        }
+
+        public GraphNode[,] Cells => cells;
+
         // Gets the cell node based on cell identifier
-        public CellNode GetCell(string id)
+        public GraphNode GetCell(string id)
         {
             var (row, col) = GetPositionFromId(id);
 
             var cell = cells[row, col];
 
             if (cell == null)            
-                cell = new CellNode(id, row, col);            
+                cell = CreateCell(id, row, col);            
 
             return cell;
         }
 
-        // Identifies if cell value is a formula or a constant and assigns accordingly
-        public void SetCellValueOrFormula(string  id, string valueOrFormula)
+        public GraphNode CreateCell(string id, uint row, uint col)
         {
-            if (string.IsNullOrWhiteSpace(valueOrFormula))
+            return new GraphNode(this, id, row, col);
+        }
+
+        // Identifies if cell value is a formula or a constant and assigns accordingly
+        public void SetCellFormula(string  id, string formula)
+        {
+            if (string.IsNullOrWhiteSpace(formula))
                 throw new ArgumentException("Value or Formula is missing");
 
             var (row, col) = GetPositionFromId(id);
 
             if (cells[row, col] == null)
-                cells[row, col] = new CellNode(id, row, col);
+                cells[row, col] = CreateCell(id, row, col);
 
             var cell = cells[row, col];
-
-            if (double.TryParse(valueOrFormula, out double value))
+                
+            // Could be a value too
+            if (double.TryParse(formula, out double value))
             {
-                cell.Value = value;
-                cell.Formula = valueOrFormula;
+                SetCellValue(cell, value);
+                cell.Formula = new[] { formula };
             }
             else
             {
                 cells[row, col].Value = null;
-                SetCellFormula(row, col, valueOrFormula);
+                SetCellFormula(row, col, formula);
             }
         }
 
-        public void Evaluate()
+        public void SetCellValue(GraphNode cell, double? value)
+        {            
+            if (!value.HasValue)
+            {
+                cell.Value = null;
+                return;
+            }
+
+            if (!ApplicationConfiguration.Instance.AllowNegatives)
+                value = Math.Abs(value.Value); // as per requirement 
+
+            cell.Value = value;
+
+            cell.Observers.Notify();
+        }
+
+        // Gets the position (x,y) when cell identifier is specified
+        // Validates the input
+        public (uint, uint) GetPositionFromId(string id)
         {
-            //Walk through the graph and evaluate formula
-            var root = GetCell("A0");
+            // Decision: Used single exception with multiple messages as
+            // these are raised when id is invalid
+            // So that the code is terse
+            if (string.IsNullOrWhiteSpace(id))
+                throw new InvalidCellReferenceException($"Cell name is missing");
 
+            if (!char.IsLetter(id[0]) || id.Length == 1)
+                throw new InvalidCellReferenceException($"Cell reference is not well formed");
 
+            var colRef = id.Substring(1);
+            if (!uint.TryParse(colRef, out uint colId) || colId == 0)
+                throw new InvalidCellReferenceException($"Column reference zero is not allowed");
+
+            uint rowId = (uint)((id.ToLower())[0] - 'a');
+            colId--;
+
+            if (Height < rowId || Width < colId)
+                throw new CellRangeOutOfBoundsException(rowId + 1, colId + 1);
+
+            return (rowId, colId);
         }
 
         // Privates
@@ -91,28 +143,33 @@ namespace Redmart.Interview.Spreadsheet
                     var (formulaRow, formulaCol) = GetPositionFromId(token);                    
                     var connectionCell = cells[formulaRow, formulaCol];
 
-                    if (connectionCell == null)                    
-                        connectionCell = new CellNode(token, formulaRow, formulaCol);                    
+                    if (connectionCell == null)
+                    {
+                        connectionCell = CreateCell(token, formulaRow, formulaCol);
+                        cells[formulaRow, formulaCol] = connectionCell;
+                    }
 
                     AddEdge(thisCell, connectionCell);
                 }
             }
 
-            cells[row, col].Formula = formula;
+            cells[row, col].Formula = tokens;
         }
 
         // Adds a directed edge to the cell
         // Tradeoff decision - speed vs space - prefer speed as this space is shortlived and temporary
-        private void AddEdge(CellNode from, CellNode to)
+        private void AddEdge(GraphNode from, GraphNode to)
         {
             from.Edges.Add(to);
             var bitmap = new bool[cells.GetLength(0), cells.GetLength(1)];
+
+            to.Observers.Add(from);
 
             CheckForCyclicDependencies(from, bitmap);
         }
 
         // Walk through dependent nodes and check each dependent node for dependencies        
-        private void CheckForCyclicDependencies(CellNode cell, bool[,] bitmap)
+        private void CheckForCyclicDependencies(GraphNode cell, bool[,] bitmap)
         {
             if (cell == null)
                 return;
@@ -128,32 +185,6 @@ namespace Redmart.Interview.Spreadsheet
             {
                 CheckForCyclicDependencies(cell.Edges[i], bitmap);
             }            
-        }
-
-        // Gets the position (x,y) when cell identifier is specified
-        // Validates the input
-        private (uint, uint) GetPositionFromId(string id)
-        {
-            // Decision: Used single exception with multiple messages as
-            // these are raised when id is invalid
-            // So that the code is terse
-            if (string.IsNullOrWhiteSpace(id))
-                throw new InvalidCellReferenceException($"Cell name is missing");
-
-            if (!char.IsLetter(id[0]) || id.Length == 1)
-                throw new InvalidCellReferenceException($"Cell reference is not well formed");
-
-            var colRef = id.Substring(1);
-            if (!uint.TryParse(colRef, out uint colId) || colId == 0)
-                throw new InvalidCellReferenceException($"Column reference zero is not allowed");
-
-            uint rowId = (uint)((id.ToLower())[0] - 'a');
-            colId--  ;
-
-            if (maxRows < rowId || maxColumns < colId)
-                throw new CellRangeOutOfBoundsException(rowId + 1, colId + 1);
-
-            return (rowId, colId);
-        }        
+        }      
     }
 }

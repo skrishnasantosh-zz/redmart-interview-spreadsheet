@@ -1,87 +1,110 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Redmart.Interview.Spreadsheet.Configuration;
-using Redmart.Interview.Spreadsheet.Tokens;
+﻿using Redmart.Interview.Spreadsheet.Configuration;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Text;
 
 namespace Redmart.Interview.Spreadsheet
 {
-    public class Spreadsheet
+    public static class Spreadsheet
     {
-        //private readonly IApplicationConfiguration configuration;
-        private readonly TokenMap tokenMap;
-        
-        public Spreadsheet(WorkSheetGraph sheet, TokenMap map)
-        {
-            Sheet = sheet;
+        private const char ROWSTART = 'A';
+        private const char ROWEND= 'Z';
 
-            //configuration = config;
-            tokenMap = map;
+        public static int Main(string[] args)
+        {
+            try
+            {
+                return Run(args);
+            }
+            catch(CommandlineInputException ex) 
+            {
+                Console.WriteLine($"ERROR : {ex.Message}");
+                return -1;
+            }
+            catch (OverflowException ex)
+            {
+                Console.WriteLine($"ERROR : {ex.Message}");
+                return -2;
+            }
+            catch (SpreadSheetException ex)
+            {
+                Console.WriteLine($"ERROR : {ex.Message}");
+                return ex.ErrorCode;
+            }
         }
 
-        static int Main(string[] args)
+        public static int Run(string[] args)
         {
-            IServiceCollection services = new ServiceCollection();
-
-            services.AddTransient(typeof(WorkSheetGraph));
-            services.AddTransient(typeof(TokenMap));
-                
-            services.AddSingleton(typeof(Spreadsheet));
-
-            var container = services.BuildServiceProvider();
-
-            var spreadSheet = container.GetRequiredService<Spreadsheet>();
-
-            if (args.Length != 2)
+            if (args.Length == 0)
             {
-                Console.WriteLine("Error : No input");
-                
+                Console.WriteLine("ERROR: No commandline arguments");
+                return -1;
             }
 
-            Console.WriteLine(args[1]);
+            var source = args[0];
 
-            //spreadSheet.ProcessInput(argv[1]);
+            Console.WriteLine(source);
+
+            ProcessInput(source);
 
             return 0;
-            
         }
 
-        public WorkSheetGraph Sheet
+        public static void ProcessInput(string source)
+        {
+            int columnIndex = 1;
+            char rowPrefix = ROWSTART;
+
+            using (var reader = new StringReader(source))
+            {
+                var line = reader.ReadLine();
+                if (line != null)                
+                    CreateWorkSheet(line);
+
+                while (line != null)
+                {
+                    line = reader.ReadLine();
+                    string cellId = $"{rowPrefix}{columnIndex}";
+
+                    CurrentSheet.SetCellFormula(cellId, line);
+
+                    if (columnIndex >= CurrentSheet.Width)
+                    {
+                        rowPrefix++;
+                        columnIndex = 0;
+                    }
+                }
+            }
+        }
+
+        private static void CreateWorkSheet(string line)
+        {
+            var bounds = line.Split(' ');
+
+            if (bounds.Length != 2)
+                throw new CommandlineInputException($"Bounds could not be resolved from {line}");
+
+            if (bounds[0].StartsWith('-') || bounds[1].StartsWith('-'))
+                throw new WorksheetInvalidBoundsException(bounds[0], bounds[1]);
+
+            if (!uint.TryParse(bounds[0], out uint width) ||
+                !uint.TryParse(bounds[1], out uint height))
+                throw new CommandlineInputException($"Incorrect bound specification (width : {bounds[0]}, height : {bounds[1]})");
+
+            if (height > (ROWEND - ROWSTART))
+                throw new OverflowException($"There cannot be more than {(ROWEND - ROWSTART)} rows at this time");
+
+            CurrentSheet = new WorkSheetGraph(height, width);
+        }
+            
+        public static WorkSheetGraph CurrentSheet
         {
             get;
-        }
-
-        public void ProcessInput(string formulae)
-        {
-
-        }
-
-        //private double ReduceWorksheet()
-        //{
-        //    Stack<double> stack = new Stack<double>();
-        //    Stack<CellNode> visited = new Stack<CellNode>();
-            
-        //    foreach (var sh)
-        //    //quick exit if it is a single value
-        //    if (double.TryParse(formula, out double value) && tokens.Count() == 1)            
-        //        return value; 
-            
-        //    foreach (var token in tokens)
-        //    {
-        //        var op = tokenMap.GetMappedOperator(token);
-        //        var reduced = op.Reduce(stack, token);
-
-        //        stack.Push(reduced);
-        //    }
-
-        //    if (stack.Count() != 1)
-        //        throw new InvalidOperationException($"Invalid Formula - {formula}");
-
-        //    return stack.Pop();
-        //}
+            private set;
+        }      
     }
 }

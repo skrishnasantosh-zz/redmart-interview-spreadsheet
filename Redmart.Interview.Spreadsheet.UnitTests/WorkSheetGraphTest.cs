@@ -45,7 +45,7 @@ namespace Redmart.Interview.Spreadsheet.UnitTests
             var workSheet = new WorkSheetGraph(3, 3);
 
             // act
-            workSheet.SetCellValueOrFormula("A1", "A2 B2 / 2 +");
+            workSheet.SetCellFormula("A1", "A2 B2 / 2 +");
             var cell = workSheet.GetCell("A1");
 
             // assert
@@ -62,15 +62,15 @@ namespace Redmart.Interview.Spreadsheet.UnitTests
             var workSheet = new WorkSheetGraph(2, 4);
 
             // act
-            workSheet.SetCellValueOrFormula("A1", "A2 B2 / 2 +");
-            workSheet.SetCellValueOrFormula("A2", "A3 B2 / 2 +");
-            workSheet.SetCellValueOrFormula("A3", "A4 B2 / 2 +");
+            workSheet.SetCellFormula("A1", "A2 B2 / 2 +");
+            workSheet.SetCellFormula("A2", "A3 B2 / 2 +");
+            workSheet.SetCellFormula("A3", "A4 B2 / 2 +");
             
             var cellA1 = workSheet.GetCell("A1");
             var cellA2 = workSheet.GetCell("A2");
             var cellA3 = workSheet.GetCell("A3");
             var cellA4 = workSheet.GetCell("A4");
-            var cellB2 = workSheet.GetCell("A4");
+            var cellB2 = workSheet.GetCell("B2");
 
             // assert
             Assert.AreEqual(2, cellA1.Edges.Count);
@@ -98,10 +98,10 @@ namespace Redmart.Interview.Spreadsheet.UnitTests
             var workSheet = new WorkSheetGraph(3, 3);
 
             // act and assert
-            workSheet.SetCellValueOrFormula("A1", "A2 B2 / 2 +");
+            workSheet.SetCellFormula("A1", "A2 B2 / 2 +");
 
             Assert.ThrowsException<CyclicDependencyException>(
-                () => workSheet.SetCellValueOrFormula("A2", "A1 B2 / 2 +")
+                () => workSheet.SetCellFormula("A2", "A1 B2 / 2 +")
                 );
 
         }
@@ -113,11 +113,11 @@ namespace Redmart.Interview.Spreadsheet.UnitTests
             var workSheet = new WorkSheetGraph(5, 5);
 
             // act and assert
-            workSheet.SetCellValueOrFormula("A1", "A2 B2 / 2 +");
-            workSheet.SetCellValueOrFormula("A2", "A3 B2 / 2 +");
+            workSheet.SetCellFormula("A1", "A2 B2 / 2 +");
+            workSheet.SetCellFormula("A2", "A3 B2 / 2 +");
 
             Assert.ThrowsException<CyclicDependencyException>(
-                () => workSheet.SetCellValueOrFormula("A3", "A1 B2 / 2 +")
+                () => workSheet.SetCellFormula("A3", "A1 B2 / 2 +")
                 );
 
         }
@@ -130,9 +130,9 @@ namespace Redmart.Interview.Spreadsheet.UnitTests
             var workSheet = new WorkSheetGraph(5, 5);
 
             // act 
-            workSheet.SetCellValueOrFormula("A1", "A2 B2 / 2 +");
-            workSheet.SetCellValueOrFormula("A2", "A3 B2 / 2 +");
-            workSheet.SetCellValueOrFormula("A3", "A4 B2 / 2 +");
+            workSheet.SetCellFormula("A1", "A2 B2 / 2 +");
+            workSheet.SetCellFormula("A2", "A3 B2 / 2 +");
+            workSheet.SetCellFormula("A3", "A4 B2 / 2 +");
 
             // no assert needed as the test is to check if exception is not raised.
         }

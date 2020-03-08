@@ -4,9 +4,9 @@ using System.Text;
 
 namespace Redmart.Interview.Spreadsheet
 {
-    public class InvalidCellReferenceException : ApplicationException
+    public class InvalidCellReferenceException : SpreadSheetException
     {
-        public InvalidCellReferenceException(string message) : base(message) 
+        public InvalidCellReferenceException(string message) : base(message, -6) 
         { 
         }
     }
