@@ -8,7 +8,10 @@ namespace Redmart.Interview.Spreadsheet.Configuration
     {
         private static ApplicationConfiguration instance;
 
-        private ApplicationConfiguration() { }
+        private ApplicationConfiguration() 
+        {
+            AllowNegatives = true; //Set this to false to treat negatives as positive numbers
+        }
         
         public bool AllowNegatives { get; set; }
 
