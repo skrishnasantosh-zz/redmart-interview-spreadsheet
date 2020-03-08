@@ -31,6 +31,22 @@ namespace Redmart.Interview.Spreadsheet.UnitTests
         }
 
         [TestMethod]
+        public void WhenFormulaHasNegativeNumbers_ShouldEvaluateCorrectly()
+        {
+            // arrange
+            var formula = "-1 2 +";
+
+            // act
+            var tokens = formula.Split(' ');
+            var eval = new FormulaEvaluator(tokens);
+            var result = eval.Evaluate();
+
+            // assert
+
+            Assert.AreEqual(result, 1);
+        }
+
+        [TestMethod]
         public void WhenSimpleFormulaForNegativeResult_ShouldEvaluateCorrectly()
         {
             // arrange 
@@ -108,7 +124,7 @@ namespace Redmart.Interview.Spreadsheet.UnitTests
         }
 
         [TestMethod]
-        public void WhenInvalidOperaandsAreProvided_ShouldThrowFormulaEvaluatorException()
+        public void WhenInvalidOperandsAreProvided_ShouldThrowFormulaEvaluatorException()
         {
             // arrange
             var formula = "1 +";

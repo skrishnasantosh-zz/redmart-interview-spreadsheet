@@ -114,7 +114,7 @@ namespace Redmart.Interview.Spreadsheet.UnitTests
         // Cyclic Dependencies
         [TestMethod]
         public void WhenFormulaHasCyclicDepedency_ThrowsCyclicDependencyException()
-        {
+        {            
             // arrange
             var workSheet = new WorkSheetGraph(new Spreadsheet(), 3, 3);
 

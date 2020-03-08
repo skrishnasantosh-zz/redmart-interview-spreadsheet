@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Redmart.Interview.Spreadsheet.Operators
 {
@@ -8,10 +9,7 @@ namespace Redmart.Interview.Spreadsheet.Operators
     {
         public bool IsOpcodeMatch(string token)
         {
-            if (token.Length >= 1 && char.IsDigit(token[0]))
-                return true;
-
-            return false;
+            return (double.TryParse(token, out double value));
         }
 
         public void Operate(string token, Stack<double> stack)

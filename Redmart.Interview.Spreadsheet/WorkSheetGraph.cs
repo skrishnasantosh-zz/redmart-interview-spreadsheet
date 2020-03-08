@@ -25,8 +25,8 @@ namespace Redmart.Interview.Spreadsheet
             // Create a null matrix of rows * columns
             cells = new GraphNode[height, width];
 
-            Height = height - 1;
-            Width = width - 1;
+            Height = height;
+            Width = width;
         }
 
         public uint Height 
@@ -126,7 +126,7 @@ namespace Redmart.Interview.Spreadsheet
             uint rowId = (uint)((id.ToLower())[0] - 'a');
             colId--;
 
-            if (Height < rowId || Width < colId)
+            if (rowId >= Height || colId >= Width)
                 throw new CellRangeOutOfBoundsException(rowId + 1, colId + 1);
 
             return (rowId, colId);

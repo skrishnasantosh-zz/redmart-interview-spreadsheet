@@ -46,7 +46,7 @@ namespace Redmart.Interview.Spreadsheet
             }
         }
 
-        public static WorkSheetGraph CurrentSheet
+        public WorkSheetGraph CurrentSheet
         {
             get;
             private set;
@@ -87,7 +87,7 @@ namespace Redmart.Interview.Spreadsheet
                     CurrentSheet.SetCellFormula(cellId, line);
 
                     columnIndex++;
-                    if (columnIndex > CurrentSheet.Width)
+                    if (columnIndex >= CurrentSheet.Width)
                     {
                         rowPrefix++;
                         columnIndex = 0;
@@ -120,11 +120,11 @@ namespace Redmart.Interview.Spreadsheet
       
         public void Dump()
         {
-            Console.WriteLine($"{CurrentSheet.Width + 1} {CurrentSheet.Height + 1}");
+            Console.WriteLine($"{CurrentSheet.Width} {CurrentSheet.Height}");
             // Probably the only time we need to scan the whole matrix 
-            for (int h = 0; h <= CurrentSheet.Height; h ++)
+            for (int h = 0; h < CurrentSheet.Height; h ++)
             {
-                for (int w = 0; w <= CurrentSheet.Width; w++)
+                for (int w = 0; w < CurrentSheet.Width; w++)
                 {
                     var cell = CurrentSheet.Cells[h, w];
                     Console.WriteLine($"{cell.Value:0.00000}");                    
