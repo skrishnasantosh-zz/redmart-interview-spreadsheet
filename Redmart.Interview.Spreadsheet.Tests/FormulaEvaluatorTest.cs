@@ -11,7 +11,7 @@ namespace Redmart.Interview.Spreadsheet.UnitTests
         [TestInitialize]
         public void Initialize()
         {
-            var operatorFactory = OperatorFactory.Instance;
+            var operatorFactory = OperatorStrategy.Instance;
         }
 
         [TestMethod]

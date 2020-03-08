@@ -1,22 +1,18 @@
-﻿using Redmart.Interview.Spreadsheet.Configuration;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Redmart.Interview.Spreadsheet
 {
-    // Model this graph as Adjacency matrix
-
-    // Worksheet handles insertion of values into the sheet.
-    // It does not process formula and handles all stuffs related to entry 
-    // and detection of cyclic dependencies on such entry
-    public class WorkSheetGraph 
+    // Model this graph as Adjacency matrix. 
+    // This class only manages the graph (including setting values and detecting cyclic dependency)
+    public class WorkSheetGraph
     {
         private readonly GraphNode[,] cells;
         private readonly Spreadsheet spreadSheet;
-                
+
         public WorkSheetGraph(Spreadsheet parent, uint height, uint width)
-        {   
+        {
             if (height == 0 || width == 0)
                 throw new WorksheetInvalidBoundsException(height, width);
 
@@ -29,14 +25,14 @@ namespace Redmart.Interview.Spreadsheet
             Width = width;
         }
 
-        public uint Height 
-        { 
-            get; 
+        public uint Height
+        {
+            get;
         }
 
-        public uint Width 
-        { 
-            get; 
+        public uint Width
+        {
+            get;
         }
 
         public GraphNode[,] Cells => cells;
@@ -48,8 +44,8 @@ namespace Redmart.Interview.Spreadsheet
 
             var cell = cells[row, col];
 
-            if (cell == null)            
-                cell = CreateCell(id, row, col);            
+            if (cell == null)
+                cell = CreateCell(id, row, col);
 
             return cell;
         }
@@ -60,7 +56,7 @@ namespace Redmart.Interview.Spreadsheet
         }
 
         // Identifies if cell value is a formula or a constant and assigns accordingly
-        public void SetCellFormula(string  id, string formula)
+        public void SetCellFormula(string id, string formula)
         {
             if (string.IsNullOrWhiteSpace(formula))
                 throw new ArgumentException("Value or Formula is missing");
@@ -91,18 +87,14 @@ namespace Redmart.Interview.Spreadsheet
         }
 
         public void SetCellValue(GraphNode cell, double? value)
-        {            
+        {
             if (!value.HasValue)
             {
                 cell.Value = null;
                 return;
             }
 
-            if (!ApplicationConfiguration.Instance.AllowNegatives)
-                value = Math.Abs(value.Value); // as per requirement 
-
             cell.Value = value;
-
             cell.Observers.Notify();
         }
 
@@ -138,7 +130,7 @@ namespace Redmart.Interview.Spreadsheet
         // extend the edges of the graph and check for 
         // cyclic dependencies
         private void SetCellFormula(uint row, uint col, string[] tokens)
-        {            
+        {
             var thisCell = cells[row, col];
 
             cells[row, col].Formula = tokens;
@@ -149,7 +141,7 @@ namespace Redmart.Interview.Spreadsheet
                 // so that formula evaluation happens faster
                 if (char.IsLetter(token[0]))
                 {
-                    var (formulaRow, formulaCol) = GetPositionFromId(token);                    
+                    var (formulaRow, formulaCol) = GetPositionFromId(token);
                     var connectionCell = cells[formulaRow, formulaCol];
 
                     if (connectionCell == null)
@@ -167,34 +159,30 @@ namespace Redmart.Interview.Spreadsheet
         // Tradeoff decision - speed vs space - prefer speed as this space is shortlived and temporary
         private void AddEdge(GraphNode from, GraphNode to)
         {
-            from.Edges.Add(to);
-            var bitmap = new bool[cells.GetLength(0), cells.GetLength(1)];
+            if (from.Name == to.Name)
+                throw new CyclicDependencyException($"{from.Name}");
 
+            from.Edges.Add(to);            
             to.Observers.Add(from);
 
-            CheckForCyclicDependencies(from, bitmap);
+            CheckForCyclicDependencies(from, null);
 
             to.Observers.NotifyNode(from); //Notify the newly added observer inorder to force a recalculate
         }
 
         // Walk through dependent nodes and check each dependent node for dependencies        
-        private void CheckForCyclicDependencies(GraphNode cell, bool[,] bitmap)
+        private void CheckForCyclicDependencies(GraphNode sourceCell, GraphNode recurseCell)
         {
-            if (cell == null)
-                return;
+            if (recurseCell == null)
+                recurseCell = sourceCell;
 
-            var (row, col) = cell.Position;
-
-            if (bitmap[row, col] == true)
-                throw new CyclicDependencyException(cell.Name);
-
-            bitmap[row, col] = true; //mark current node in bitmap
-
-            for (var i = 0; i < cell.Edges.Count; i++)
+            foreach (var node in recurseCell.Edges)
             {
-                bitmap = new bool[cells.GetLength(0), cells.GetLength(1)];
-                CheckForCyclicDependencies(cell.Edges[i], bitmap);
-            }            
-        }      
+                if (node.Name == sourceCell.Name)
+                    throw new CyclicDependencyException($"{sourceCell.Name}");
+
+                CheckForCyclicDependencies(sourceCell, node);
+            }
+        }
     }
 }

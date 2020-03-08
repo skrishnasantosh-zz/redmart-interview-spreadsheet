@@ -82,8 +82,11 @@ namespace Redmart.Interview.Spreadsheet
             for (var i = 0; i < formula.Count(); i++)
             {
                 if (formula[i].ToLower() == updatedNode.Name.ToLower() &&
-                    updatedNode.Value != null)                
+                    updatedNode.Value != null)
+                {
                     ResolvedFormula[i] = Convert.ToString(updatedNode.Value);
+                    break;
+                }
             }
 
             Evaluate();

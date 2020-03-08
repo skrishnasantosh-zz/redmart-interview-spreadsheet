@@ -1,5 +1,4 @@
-﻿using Redmart.Interview.Spreadsheet.Configuration;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -127,7 +126,10 @@ namespace Redmart.Interview.Spreadsheet
                 for (int w = 0; w < CurrentSheet.Width; w++)
                 {
                     var cell = CurrentSheet.Cells[h, w];
-                    Console.WriteLine($"{cell.Value:0.00000}");                    
+                    if (cell != null && cell.Value.HasValue)
+                        Console.WriteLine($"{cell.Value:0.00000}");
+                    else
+                        Console.WriteLine("-");
                 }
             }
         }

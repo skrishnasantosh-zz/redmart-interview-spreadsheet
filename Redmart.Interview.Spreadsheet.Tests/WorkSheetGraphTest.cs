@@ -112,7 +112,7 @@ namespace Redmart.Interview.Spreadsheet.UnitTests
         }
 
         // Cyclic Dependencies
-        [TestMethod]
+        [TestMethod]        
         public void WhenFormulaHasCyclicDepedency_ThrowsCyclicDependencyException()
         {            
             // arrange
@@ -127,7 +127,7 @@ namespace Redmart.Interview.Spreadsheet.UnitTests
 
         }
 
-        [TestMethod]
+        [TestMethod]        
         public void WhenFormulaHasMultiLevelCyclicDepedency_CyclicDependencyExceptionIsThrown()
         {
             // arrange

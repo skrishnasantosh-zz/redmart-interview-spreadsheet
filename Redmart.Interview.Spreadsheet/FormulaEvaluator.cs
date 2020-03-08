@@ -35,7 +35,7 @@ namespace Redmart.Interview.Spreadsheet
 
             foreach (var token in formula)
             {
-                var op = OperatorFactory.Instance.CreateOperatorForToken(token);
+                var op = OperatorStrategy.Instance.GetOperator(token);
                 if (op == null)
                     throw new OperatorNotFoundException($"Unrecognized operator {token}");
 
