@@ -4,11 +4,11 @@ using System.Text;
 
 namespace Redmart.Interview.Spreadsheet.Operators
 {
-    public abstract class BinaryOperator : IOperator
+    public abstract class UnaryOperator : IOperator
     {
         private string opCode;
 
-        public BinaryOperator(string opCode)
+        public UnaryOperator(string opCode)
         {
             this.opCode = opCode;
         }
@@ -20,17 +20,14 @@ namespace Redmart.Interview.Spreadsheet.Operators
 
         public void Operate(string token, Stack<double> stack)
         {
-            if (stack.Count < 2)
+            if (stack.Count < 1)
                 throw new FormulaEvaluatorException("Incorrect operands for this operator");
 
-            var rValue = stack.Pop();
-            var lValue = stack.Pop();
-
-            var value = Calculate(lValue, rValue);
+            var value = Calculate(stack.Pop());
 
             stack.Push(value);
         }
 
-        public abstract double Calculate(double lValue, double rValue);
+        public abstract double Calculate(double lValue);
     }
 }

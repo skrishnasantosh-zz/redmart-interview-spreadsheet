@@ -7,7 +7,7 @@ namespace Redmart.Interview.Spreadsheet
     public class CyclicDependencyException : SpreadSheetException
     {
         public CyclicDependencyException(string cellId) :
-            base($"Cyclical Dependencies found when evaluatuing {cellId}", -4)
+            base($"Cyclical Dependencies found when evaluating {cellId}", -4)
         {
 
         }

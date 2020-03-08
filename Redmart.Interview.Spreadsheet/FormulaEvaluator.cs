@@ -15,6 +15,17 @@ namespace Redmart.Interview.Spreadsheet
             this.formula = formula?.ToArray() ?? new string[] { };
         }
 
+        public bool HasCellReference()
+        {
+            foreach (var token in formula)
+            {
+                if (token.Length > 0 && char.IsLetter(token[0]))
+                    return true;
+            }
+
+            return false;
+        }
+
         public double? Evaluate()
         {
             if (formula.Count() == 0)
@@ -26,13 +37,13 @@ namespace Redmart.Interview.Spreadsheet
             {
                 var op = OperatorFactory.Instance.CreateOperatorForToken(token);
                 if (op == null)
-                    throw new InvalidOperationException($"Unrecognized operator {token}");
+                    throw new OperatorNotFoundException($"Unrecognized operator {token}");
 
                 op.Operate(token, stack);
             }
 
             if (stack.Count != 1)
-                throw new InvalidOperationException("The formula cannot be evaulated");
+                throw new FormulaEvaluatorException("The formula cannot be evaulated");
 
             return stack.Pop();
         }

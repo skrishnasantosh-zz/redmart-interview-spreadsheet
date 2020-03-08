@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.29613.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Redmart.Interview.Spreadsheet", "Redmart.Interview.Spreadsheet\Redmart.Interview.Spreadsheet.csproj", "{9C3E5D64-81F0-4E20-9652-C82D87E759DA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Redmart.Interview.Spreadsheet.UnitTests", "Redmart.Interview.Spreadsheet.UnitTests\Redmart.Interview.Spreadsheet.UnitTests.csproj", "{96C573DC-67B3-4E80-B97B-A2060C7CB431}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Redmart.Interview.Spreadsheet.Tests", "Redmart.Interview.Spreadsheet.Tests\Redmart.Interview.Spreadsheet.Tests.csproj", "{96C573DC-67B3-4E80-B97B-A2060C7CB431}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -12,7 +12,7 @@ namespace Redmart.Interview.Spreadsheet.UnitTests
         public void WhenGraphNodeIsDependentOnOther_ObserverIsSetCorrectly()
         {
             // arrange
-            var workSheet = new WorkSheetGraph(2, 4);
+            var workSheet = new WorkSheetGraph(new Spreadsheet(), 2, 4);
 
             // act
             workSheet.SetCellFormula("A1", "A2 B2 / 2 +");
@@ -44,7 +44,7 @@ namespace Redmart.Interview.Spreadsheet.UnitTests
         public void WhenGraphNodeIsDependentOnOther_ObserverIsEvaluatedCorrectly()
         {
             // arrange
-            var workSheet = new WorkSheetGraph(2, 4);
+            var workSheet = new WorkSheetGraph(new Spreadsheet(), 2, 4);
 
             // act
             workSheet.SetCellFormula("A1", "A2");

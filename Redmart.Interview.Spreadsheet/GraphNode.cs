@@ -8,7 +8,7 @@ namespace Redmart.Interview.Spreadsheet
     public class GraphNode : IObservable
     {        
         private double? doubleVal;
-        private List<string> resolvedFormula;
+        private List<string> formula;
         
         public GraphNode(WorkSheetGraph root, string id, uint row, uint col)
         {
@@ -17,7 +17,7 @@ namespace Redmart.Interview.Spreadsheet
             Name = id;
             Position = (row, col);
 
-            resolvedFormula = new List<string>();
+            formula = new List<string>();
 
             Observers = new GraphNodeObserver(this);
             Parent = root;
@@ -26,6 +26,28 @@ namespace Redmart.Interview.Spreadsheet
         public (uint, uint) Position { get; set; }
 
         public string Name { get; set; }
+
+        public WorkSheetGraph Parent { get;  }
+
+        public IList<string> ResolvedFormula { get; set; }
+
+        public IList<GraphNode> Edges { get; }
+
+        public GraphNodeObserver Observers { get; }
+
+        public IEnumerable<string> Formula
+        {
+            get
+            {
+                return formula;
+            }
+
+            set
+            {
+                formula = value.ToList();
+                ResolvedFormula = value.ToArray();
+            }
+        }
 
         public double? Value
         {
@@ -40,39 +62,31 @@ namespace Redmart.Interview.Spreadsheet
             }
         }
 
-        public IEnumerable<string> Formula { get; set; }
-
-        public WorkSheetGraph Parent { get;  }
-
-        public IEnumerable<string> ResolvedFormula => resolvedFormula;
-
-        public IList<GraphNode> Edges { get; }
-
-        public GraphNodeObserver Observers { get; }
-
-        void IObservable.OnNotify(GraphNode updatedNode)
-        {
-            resolvedFormula = new List<string>(Formula);
-            var formula = Formula.ToArray();
-
-            for (var i = 0; i < formula.Count(); i++)
-            {
-                if (formula[i].ToLower() == updatedNode.Name.ToLower() &&
-                    updatedNode.Value != null)                
-                    resolvedFormula[i] = Convert.ToString(updatedNode.Value);                
-                else
-                    resolvedFormula[i] = formula[i];
-            }
-
-            EvaluateCell();
-        }
-
-        private void EvaluateCell()
+        private void Evaluate()
         {
             var evaluator = new FormulaEvaluator(ResolvedFormula);
+
+            if (evaluator.HasCellReference())
+                return;
+
             var result = evaluator.Evaluate();
 
             Value = result;
         }
+
+        public void OnNotify(GraphNode updatedNode)
+        {
+            var formula = Formula.ToArray();
+
+            // update only the affected node
+            for (var i = 0; i < formula.Count(); i++)
+            {
+                if (formula[i].ToLower() == updatedNode.Name.ToLower() &&
+                    updatedNode.Value != null)                
+                    ResolvedFormula[i] = Convert.ToString(updatedNode.Value);
+            }
+
+            Evaluate();
+        }        
     }
 }

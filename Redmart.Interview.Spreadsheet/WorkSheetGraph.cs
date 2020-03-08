@@ -13,11 +13,14 @@ namespace Redmart.Interview.Spreadsheet
     public class WorkSheetGraph 
     {
         private readonly GraphNode[,] cells;
+        private readonly Spreadsheet spreadSheet;
                 
-        public WorkSheetGraph(uint height, uint width)
+        public WorkSheetGraph(Spreadsheet parent, uint height, uint width)
         {   
             if (height == 0 || width == 0)
                 throw new WorksheetInvalidBoundsException(height, width);
+
+            spreadSheet = parent;
 
             // Create a null matrix of rows * columns
             cells = new GraphNode[height, width];
@@ -68,17 +71,22 @@ namespace Redmart.Interview.Spreadsheet
                 cells[row, col] = CreateCell(id, row, col);
 
             var cell = cells[row, col];
-                
-            // Could be a value too
-            if (double.TryParse(formula, out double value))
+            var tokens = formula.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+            // Could be a simple value too - check for it
+            FormulaEvaluator evaluator = new FormulaEvaluator(tokens);
+
+            if (!evaluator.HasCellReference())
             {
+                var value = evaluator.Evaluate();
+
                 SetCellValue(cell, value);
                 cell.Formula = new[] { formula };
             }
             else
             {
                 cells[row, col].Value = null;
-                SetCellFormula(row, col, formula);
+                SetCellFormula(row, col, tokens);
             }
         }
 
@@ -129,10 +137,11 @@ namespace Redmart.Interview.Spreadsheet
         // In case the value provided is a formula, 
         // extend the edges of the graph and check for 
         // cyclic dependencies
-        private void SetCellFormula(uint row, uint col, string formula)
-        {
-            var tokens = formula.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        private void SetCellFormula(uint row, uint col, string[] tokens)
+        {            
             var thisCell = cells[row, col];
+
+            cells[row, col].Formula = tokens;
 
             foreach (var token in tokens)
             {
@@ -152,8 +161,6 @@ namespace Redmart.Interview.Spreadsheet
                     AddEdge(thisCell, connectionCell);
                 }
             }
-
-            cells[row, col].Formula = tokens;
         }
 
         // Adds a directed edge to the cell
@@ -166,6 +173,8 @@ namespace Redmart.Interview.Spreadsheet
             to.Observers.Add(from);
 
             CheckForCyclicDependencies(from, bitmap);
+
+            to.Observers.NotifyNode(from); //Notify the newly added observer inorder to force a recalculate
         }
 
         // Walk through dependent nodes and check each dependent node for dependencies        
@@ -183,6 +192,7 @@ namespace Redmart.Interview.Spreadsheet
 
             for (var i = 0; i < cell.Edges.Count; i++)
             {
+                bitmap = new bool[cells.GetLength(0), cells.GetLength(1)];
                 CheckForCyclicDependencies(cell.Edges[i], bitmap);
             }            
         }      

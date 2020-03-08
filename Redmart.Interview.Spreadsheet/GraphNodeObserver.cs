@@ -27,10 +27,14 @@ namespace Redmart.Interview.Spreadsheet
         public void Notify()
         {
             foreach (var observer in observers)
-            {
-                var observable = observer as IObservable;
-                observable.OnNotify(parent);
+            {                
+                NotifyNode(observer);
             }
+        }
+
+        public void NotifyNode(GraphNode node)
+        {
+            node.OnNotify(parent);            
         }
     }
 }

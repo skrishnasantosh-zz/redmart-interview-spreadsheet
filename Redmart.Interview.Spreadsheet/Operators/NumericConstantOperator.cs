@@ -22,7 +22,7 @@ namespace Redmart.Interview.Spreadsheet.Operators
                 return;
             }
             
-            throw new InvalidOperationException($"Value {token} is not recognized as number");
+            throw new FormulaEvaluatorException($"Value {token} is not recognized as number");
         }
     }
 }

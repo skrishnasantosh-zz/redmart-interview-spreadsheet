@@ -10,7 +10,7 @@ namespace Redmart.Interview.Spreadsheet.UnitTests
         public void WhenBoundsAreGiven_BoundAccessShouldBeWorking()
         {
             // arrange
-            var workSheet = new WorkSheetGraph(3, 3);
+            var workSheet = new WorkSheetGraph(new Spreadsheet(), 3, 3);
 
             // act            
             var rowTestCell = workSheet.GetCell("C1"); //Should Succeed in getting an empty cell
@@ -25,7 +25,7 @@ namespace Redmart.Interview.Spreadsheet.UnitTests
         public void WhenBoundsAreBeyondWorksheet_ThrowsCellRangeOutOfBoundsException()
         {
             // arrange
-            var workSheet = new WorkSheetGraph(3, 3);
+            var workSheet = new WorkSheetGraph(new Spreadsheet(), 3, 3);
 
             // act and assert
             Assert.ThrowsException<CellRangeOutOfBoundsException>(
@@ -39,10 +39,10 @@ namespace Redmart.Interview.Spreadsheet.UnitTests
 
         // Graph Edge creation 
         [TestMethod]
-        public void WhenMultiLevelFormulaIsPassed_AdjacacencyEdgesArePopulatedCorrectly()
+        public void WhenSimpleFormulaIsPassed_AdjacacencyEdgesArePopulatedCorrectly()
         {
             // arrange
-            var workSheet = new WorkSheetGraph(3, 3);
+            var workSheet = new WorkSheetGraph(new Spreadsheet(), 3, 3);
 
             // act
             workSheet.SetCellFormula("A1", "A2 B2 / 2 +");
@@ -56,10 +56,31 @@ namespace Redmart.Interview.Spreadsheet.UnitTests
 
         // Graph Edge creation 
         [TestMethod]
-        public void WheMultiLevelFormulaIsPassed_AdjacacencyEdgesArePopulatedCorrectly()
+        public void WhenNumericFormulaIsPassed_AdjacacencyEdgesShouldNotPopulate()
         {
             // arrange
-            var workSheet = new WorkSheetGraph(2, 4);
+            var workSheet = new WorkSheetGraph(new Spreadsheet(), 3, 3);
+
+            // act
+            workSheet.SetCellFormula("A1", "A2");
+            workSheet.SetCellFormula("A2", "4 5 *");
+            
+            var cellA1 = workSheet.GetCell("A1");
+            var cellA2 = workSheet.GetCell("A2");
+
+            // assert
+            Assert.AreEqual(1, cellA1.Edges.Count);
+            Assert.AreEqual("A2", cellA1.Edges[0].Name);
+
+            Assert.AreEqual(0, cellA2.Edges.Count);
+        }
+
+        // Graph Edge creation 
+        [TestMethod]
+        public void WhenMultiLevelFormulaIsPassed_AdjacacencyEdgesArePopulatedCorrectly()
+        {
+            // arrange
+            var workSheet = new WorkSheetGraph(new Spreadsheet(), 2, 4);
 
             // act
             workSheet.SetCellFormula("A1", "A2 B2 / 2 +");
@@ -95,7 +116,7 @@ namespace Redmart.Interview.Spreadsheet.UnitTests
         public void WhenFormulaHasCyclicDepedency_ThrowsCyclicDependencyException()
         {
             // arrange
-            var workSheet = new WorkSheetGraph(3, 3);
+            var workSheet = new WorkSheetGraph(new Spreadsheet(), 3, 3);
 
             // act and assert
             workSheet.SetCellFormula("A1", "A2 B2 / 2 +");
@@ -110,7 +131,7 @@ namespace Redmart.Interview.Spreadsheet.UnitTests
         public void WhenFormulaHasMultiLevelCyclicDepedency_CyclicDependencyExceptionIsThrown()
         {
             // arrange
-            var workSheet = new WorkSheetGraph(5, 5);
+            var workSheet = new WorkSheetGraph(new Spreadsheet(), 5, 5);
 
             // act and assert
             workSheet.SetCellFormula("A1", "A2 B2 / 2 +");
@@ -122,12 +143,30 @@ namespace Redmart.Interview.Spreadsheet.UnitTests
 
         }
 
+
+        [TestMethod]
+        public void WhenFormulaIsComplexButNoCyclicDepedency_NoExceptionShouldBeThrown()
+        {
+            // arrange
+            var workSheet = new WorkSheetGraph(new Spreadsheet(), 5, 5);
+
+            // act and assert (given input)
+            workSheet.SetCellFormula("A1", "A2");
+            workSheet.SetCellFormula("A2", "4 5 *");
+            workSheet.SetCellFormula("A3", "A1");
+            workSheet.SetCellFormula("B1", "A1 B2 / 2 +");
+            workSheet.SetCellFormula("B2", "3");
+            workSheet.SetCellFormula("B3", "39 B1 B2 * /");
+
+            // no assert needed as the test is to check if exception is not raised.
+        }
+
         // Cyclic Dependency - should not throw
         [TestMethod]
         public void WhenFormulaHasNoCyclicDepedency_NoExceptionShouldBeThrown()
         {
             // arrange
-            var workSheet = new WorkSheetGraph(5, 5);
+            var workSheet = new WorkSheetGraph(new Spreadsheet(), 5, 5);
 
             // act 
             workSheet.SetCellFormula("A1", "A2 B2 / 2 +");

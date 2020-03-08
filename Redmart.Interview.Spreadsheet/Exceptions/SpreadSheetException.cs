@@ -6,7 +6,7 @@ namespace Redmart.Interview.Spreadsheet
 {
     public class SpreadSheetException : ApplicationException
     {
-        public SpreadSheetException(string message, int errorCode)
+        public SpreadSheetException(string message, int errorCode) : base(message)
         {
             ErrorCode = errorCode;  
         }
